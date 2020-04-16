@@ -1,0 +1,52 @@
+body {
+    font-size: 10vw;
+}
+
+button {
+    font-size: 10vw;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 8vw);
+    padding: 4vw;
+    text-align: right;
+}
+
+.display {
+    margin-top: auto;
+    padding: 0 7vw;
+}
+
+.buttons {
+
+}
+
+.button-row {
+    align-items: center;
+    display: flex;
+}
+
+.button-row:not(:last-child) {
+    margin-bottom: 5vw;
+}
+
+.button {
+    border-radius: 50%;
+    box-shadow: 1vw 1vw 1vw black;
+    color: black;
+    height: 20vw;
+    width: 20vw;
+}
+
+.button:not(:last-child) {
+    margin-right: 4vw;
+}
+
+.button--double {
+    border-radius: 10vw;
+    padding-left: 8vw;
+    text-align: left;
+    width: 44vw;
+}
