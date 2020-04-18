@@ -50,3 +50,7 @@ button {
     text-align: left;
     width: 44vw;
 }
+
+.button--active {
+    background: red;
+}

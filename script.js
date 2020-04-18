@@ -2,109 +2,255 @@
 
 'use strict';
 
+let buttonsWhichCanBeActivated;
+const canBeActivated = ['divide', 'multiply', 'subtract', 'add'];
 let currentFunction;
-let currentValue = '0';
-let display;
-let startValue = '0';
-let switchDisplay = false;
+let formula = '0';
 
-function add() {
-    console.log(currentValue);
-    console.log(currentFunction);
+/**
+ * Checks number for error.
+ */
+function checkError(number) {
+    if (!isFinite(number)) {
+        return 'Error';
+    }
 
-    display.innerHTML = toString(toNumber(display.innerHTML) + toNumber(currentValue));
+    return number;
 }
 
+/**
+ * Clears all.
+ */
 function clear() {
+    currentFunction = null;
     display.innerHTML = '0';
+    formula = '0';
 }
 
-function comma() {
-    if (switchDisplay) {
-        display.innerHTML = '0,';
-        switchDisplay = false;
-    }
-
-    if (!display.innerHTML.includes(',')) {
-        display.innerHTML += ',';
-    }
+/**
+ * Clears current number.
+ */
+function clearCurrent() {
+    display.innerHTML = '0';
+    formula = formula.slice(0, formula.match(/[0-9]*\.?[0-9]*\)*$/).index) + '0' + formula.match(/\)*$/)[0];
 }
 
-function equal() {
-    // console.log();
-
-    if (window[currentFunction]) {
-        window[currentFunction]();
-    }
-}
-
+/**
+ * Get element by selector.
+ */
 function get(selector) {
     return document.querySelector(selector);
 }
 
+/**
+ * Get elements by selector.
+ */
 function getAll(selector) {
     return document.querySelectorAll(selector);
 }
 
-function negation() {
-
+/**
+ * Selects last sign.
+ */
+function lastSign() {
+    return formula[formula.length - 1];
 }
 
-function percent() {
-
+/**
+ * Fix JS 'wrong' calculations.
+ */
+function parseFloatToPrecision(number) {
+    return parseFloat(number.toPrecision(12));
 }
 
-function toNumber(string) {
-    return +string.replace(',', '.');
+/**
+ * Calculates and converts string to value for displaying.
+ */
+function toDisplay(string) {
+    return toString(checkError(parseFloatToPrecision(eval(string))));
 }
 
+/**
+ * Converts number to correct string.
+ */
 function toString(number) {
     return String(number).replace('.', ',');
 }
 
 window.onload = () => {
+    buttonsWhichCanBeActivated = canBeActivated.reduce((res, name) => {
+        const button = get(`.button[data-function="${ name }"]`);
+
+        if (button) {
+            res.push(button);
+        }
+
+        return res;
+    }, []);
     display = get('.display');
 
-    // console.log(getAll('.button'));
-
     getAll('.button').forEach(button => {
-        button.addEventListener('click', function(a) {
+        button.addEventListener('click', function() {
             const datasetFunction = this.dataset.function;
+            let sign;
+            let valueToDisplay;
 
-            // console.log(a);
-            // console.dir(this);
-            console.log(this.dataset);
+            buttonsWhichCanBeActivated.forEach(button => {
+                button.classList.remove('button--active');
+            });
+
+            if (canBeActivated.includes(this.dataset.function) && !this.classList.contains('button--active')) {
+                this.classList.add('button--active');
+            }
 
             switch(datasetFunction) {
+                case 'add':
+                case 'subtract':
+                    if (datasetFunction === 'add') {
+                        sign = '+'
+                    } else {
+                        sign = '-'
+                    }
+
+                    if (currentFunction === datasetFunction) {
+                        display.innerHTML = toDisplay(formula);
+                        formula += sign;
+
+                        break;
+                    }
+
+                    if (currentFunction) {
+                        display.innerHTML = toDisplay(formula);
+                    }
+
+                    if (lastSign() !== sign) {
+                        formula += sign;
+                    }
+
+                    currentFunction = datasetFunction;
+
+                    break;
+                case 'divide':
+                case 'multiply':
+                    if (datasetFunction === 'divide') {
+                        sign = '/'
+                    } else {
+                        sign = '*'
+                    }
+
+                    if (currentFunction === datasetFunction) {
+                        display.innerHTML = toDisplay(formula.match(/[0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+$/)[0]);
+                        formula += sign;
+
+                        break;
+                    }
+
+                    if (currentFunction && currentFunction !== datasetFunction && currentFunction !== 'equal') {
+                        display.innerHTML = toDisplay(formula.match(/([0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+)|([0-9]*\.?[0-9]*)$/)[0]);
+                    }
+
+                    if (lastSign() !== sign) {
+                        formula += sign;
+                    }
+
+                    currentFunction = datasetFunction;
+
+                    break;
+                case 'clear':
+                    clear();
+
+                    return;
+                case 'clear-current':
+                    clearCurrent();
+
+                    this.innerHTML = 'AC';
+                    this.dataset.function = 'clear';
+
+                    return;
+                case 'comma':
+                    if (lastSign() === ')') {
+                        formula += formula.match(/[+|\-|*|/].\)$/)[0][0];
+                    }
+
+                    if (lastSign() !== '.' && !isFinite(lastSign())) {
+                        display.innerHTML = '0,';
+                        formula += '0.';
+                    }
+
+                    if (!display.innerHTML.includes(',')) {
+                        display.innerHTML += ',';
+                        formula += '.';
+                    }
+
+                    break;
+                case 'equal':
+                    if (formula.match(/^[0-9]*\.?[0-9]*?$/)) {
+                        break;
+                    }
+
+                    formula = '(' + formula;
+
+                    if (currentFunction === datasetFunction) {
+                        if (formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)) {
+                            formula += formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)[0];
+                        } else if (formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)) {
+                            formula += formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)[0] + ')';
+                        }
+                    } else {
+                        formula += ')';
+                    }
+
+                    display.innerHTML = toDisplay(formula);
+                    currentFunction = datasetFunction;
+
+                    break;
+                case 'negation':
+                    valueToDisplay = String(formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/)[0].replace('(', '').replace(')', '') * (-1));
+                    formula = formula.slice(0, formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/).index) + (valueToDisplay >= 0 ? valueToDisplay : ('(' + valueToDisplay + ')'));
+                    display.innerHTML = toDisplay(valueToDisplay);
+
+                    break;
                 case 'number':
-                    if (switchDisplay) {
+                    if (lastSign() !== '.' && !isFinite(lastSign())) {
                         display.innerHTML = this.innerHTML;
-                        switchDisplay = false;
+                        formula += this.innerHTML;
 
                         break;
                     }
 
                     if (display.innerHTML === '0') {
                         display.innerHTML = this.innerHTML;
+                        formula = this.innerHTML;
                     } else {
                         display.innerHTML += this.innerHTML;
+                        formula += this.innerHTML;
                     }
 
                     break;
+                case 'percent':
+                    const lastMatch = formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*$/);
 
-                default:
-                    currentFunction = this.dataset.function;
+                    if (!lastMatch) {
+                        formula = '(' + formula + '/100' + ')';
+                        display.innerHTML = toDisplay(formula);
 
-                    if (!switchDisplay) {
-                        currentValue = display.innerHTML;
-                        switchDisplay = true;
+                        break;
                     }
 
-                    if (window[currentFunction]) {
-                        window[currentFunction]();
-                    }
+                    const lastMatchNumber = lastMatch[0].match(/[0-9]*\.?[0-9]*$/);
+
+                    valueToDisplay = lastMatchNumber[0] * formula.slice(0, lastMatch.index) / 100;
+                    display.innerHTML = toDisplay(valueToDisplay);
+                    formula = formula.slice(0, lastMatch.index + lastMatchNumber.index) + valueToDisplay;
 
                     break;
+            }
+
+            const clearButton = get('.button[data-function="clear"]');
+
+            if (clearButton) {
+                clearButton.innerHTML = 'C';
+                clearButton.dataset.function = 'clear-current';
             }
         });
     });
