@@ -1,22 +1,45 @@
 body {
-    font-size: 10vw;
+    font-size: 7vw;
+    font-family: 'Roboto', sans-serif;
+    background-color: #EBECF0;
+    color: #ACACAC;
 }
 
 button {
-    font-size: 10vw;
+    font-size: 7vw;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(255, 255, 255, 0.4) 100%), #EBECF0;
+    background-blend-mode: soft-light, normal;
+    box-shadow:  -.53vw -.53vw 2.6vw #FAFBFF, .53vw .53vw 2.6vw #BABFD1;
+    border-radius: 50%;
+    border: 0;
+    color: #ACACAC;
+    /*border-image: linear-gradient(143.13deg, rgba(255, 255, 255, 0.16) 15.83%, rgba(255, 255, 255, 0) 84.51%);*/
 }
 
 .content {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 8vw);
-    padding: 4vw;
+    padding: 6.4vw;
+    padding-bottom: 36vw;
     text-align: right;
 }
 
 .display {
     margin-top: auto;
-    padding: 0 7vw;
+    padding: 6.6vw;
+    width: 87.2vw;
+    height: 20.5vw;
+    background: linear-gradient(347.91deg, rgba(0, 0, 0, 0.4) 0%, rgba(255, 255, 255, 0.4) 105.18%), #EBECF0;
+    background-blend-mode: soft-light, normal;
+    /*border: 1px solid rgba(255, 255, 255, 0.4);*/
+    box-sizing: border-box;
+    box-shadow:  inset -.53vw -.53vw 2.1vw #FAFBFF, inset .53vw .53vw 2.1vw #A6ABBD;
+    border-radius: 5.3vw;
+    margin-bottom: 14.6vw;
+    align-items: center;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .buttons {
@@ -33,22 +56,19 @@ button {
 }
 
 .button {
-    border-radius: 50%;
-    box-shadow: 1vw 1vw 1vw black;
-    color: black;
-    height: 20vw;
-    width: 20vw;
+    height: 17.3vw;
+    width: 17.3vw;
 }
 
 .button:not(:last-child) {
-    margin-right: 4vw;
+    margin-right: 5.3vw;
 }
 
 .button--double {
-    border-radius: 10vw;
+    border-radius: 8.8vw;
     padding-left: 8vw;
     text-align: left;
-    width: 44vw;
+    width: 39vw;
 }
 
 .button--active {
