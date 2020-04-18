@@ -68,7 +68,7 @@ button {
 .button--double {
     border-radius: 8.8vw;
     padding-left: 8vw;
-    text-align: left;
+    justify-content: flex-start;
     width: 39vw;
 }
 
