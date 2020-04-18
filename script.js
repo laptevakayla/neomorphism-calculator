@@ -35,6 +35,170 @@ function clearCurrent() {
     formula = formula.slice(0, formula.match(/[0-9]*\.?[0-9]*\)*$/).index) + '0' + formula.match(/\)*$/)[0];
 }
 
+function clickListener() {
+    const datasetFunction = this.dataset.function;
+    let sign;
+    let valueToDisplay;
+
+    buttonsWhichCanBeActivated.forEach(button => {
+        button.classList.remove('button--active');
+    });
+
+    if (canBeActivated.includes(this.dataset.function) && !this.classList.contains('button--active')) {
+        this.classList.add('button--active');
+    }
+
+    switch(datasetFunction) {
+        case 'add':
+        case 'subtract':
+            if (datasetFunction === 'add') {
+                sign = '+'
+            } else {
+                sign = '-'
+            }
+
+            if (currentFunction === datasetFunction) {
+                display.innerHTML = toDisplay(formula);
+                formula += sign;
+
+                break;
+            }
+
+            if (currentFunction) {
+                display.innerHTML = toDisplay(formula);
+            }
+
+            if (lastSign() !== sign) {
+                formula += sign;
+            }
+
+            currentFunction = datasetFunction;
+
+            break;
+        case 'divide':
+        case 'multiply':
+            if (datasetFunction === 'divide') {
+                sign = '/'
+            } else {
+                sign = '*'
+            }
+
+            if (currentFunction === datasetFunction) {
+                display.innerHTML = toDisplay(formula.match(/[0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+$/)[0]);
+                formula += sign;
+
+                break;
+            }
+
+            if (currentFunction && currentFunction !== datasetFunction && currentFunction !== 'equal') {
+                display.innerHTML = toDisplay(formula.match(/([0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+)|([0-9]*\.?[0-9]*)$/)[0]);
+            }
+
+            if (lastSign() !== sign) {
+                formula += sign;
+            }
+
+            currentFunction = datasetFunction;
+
+            break;
+        case 'clear':
+            clear();
+
+            return;
+        case 'clear-current':
+            clearCurrent();
+
+            this.innerHTML = 'AC';
+            this.dataset.function = 'clear';
+
+            return;
+        case 'comma':
+            if (lastSign() === ')') {
+                formula += formula.match(/[+|\-|*|/].\)$/)[0][0];
+            }
+
+            if (lastSign() !== '.' && !isFinite(lastSign())) {
+                display.innerHTML = '0,';
+                formula += '0.';
+            }
+
+            if (!display.innerHTML.includes(',')) {
+                display.innerHTML += ',';
+                formula += '.';
+            }
+
+            break;
+        case 'equal':
+            if (formula.match(/^[0-9]*\.?[0-9]*?$/)) {
+                break;
+            }
+
+            formula = '(' + formula;
+
+            if (currentFunction === datasetFunction) {
+                if (formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)) {
+                    formula += formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)[0];
+                } else if (formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)) {
+                    formula += formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)[0] + ')';
+                }
+            } else {
+                formula += ')';
+            }
+
+            display.innerHTML = toDisplay(formula);
+            currentFunction = datasetFunction;
+
+            break;
+        case 'negation':
+            valueToDisplay = String(formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/)[0].replace('(', '').replace(')', '') * (-1));
+            formula = formula.slice(0, formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/).index) + (valueToDisplay >= 0 ? valueToDisplay : ('(' + valueToDisplay + ')'));
+            display.innerHTML = toDisplay(valueToDisplay);
+
+            break;
+        case 'number':
+            if (lastSign() !== '.' && !isFinite(lastSign())) {
+                display.innerHTML = this.innerHTML;
+                formula += this.innerHTML;
+
+                break;
+            }
+
+            if (display.innerHTML === '0') {
+                display.innerHTML = this.innerHTML;
+                formula = this.innerHTML;
+            } else {
+                display.innerHTML += this.innerHTML;
+                formula += this.innerHTML;
+            }
+
+            break;
+        case 'percent':
+            const lastMatch = formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*$/);
+
+            if (!lastMatch) {
+                formula = '(' + formula + '/100' + ')';
+                display.innerHTML = toDisplay(formula);
+
+                break;
+            }
+
+            const lastMatchNumber = lastMatch[0].match(/[0-9]*\.?[0-9]*$/);
+
+            valueToDisplay = lastMatchNumber[0] * formula.slice(0, lastMatch.index) / 100;
+            display.innerHTML = toDisplay(valueToDisplay);
+            formula = formula.slice(0, lastMatch.index + lastMatchNumber.index) + valueToDisplay;
+
+            break;
+    }
+
+    const clearButton = get('.button[data-function="clear"]');
+
+    if (clearButton) {
+        clearButton.innerHTML = 'C';
+        clearButton.dataset.function = 'clear-current';
+    }
+}
+
 /**
  * Get element by selector.
  */
@@ -89,169 +253,9 @@ window.onload = () => {
     }, []);
     display = get('.display');
 
-    getAll('.button').forEach(button => {
-        button.addEventListener('click', function() {
-            const datasetFunction = this.dataset.function;
-            let sign;
-            let valueToDisplay;
-
-            buttonsWhichCanBeActivated.forEach(button => {
-                button.classList.remove('button--active');
-            });
-
-            if (canBeActivated.includes(this.dataset.function) && !this.classList.contains('button--active')) {
-                this.classList.add('button--active');
-            }
-
-            switch(datasetFunction) {
-                case 'add':
-                case 'subtract':
-                    if (datasetFunction === 'add') {
-                        sign = '+'
-                    } else {
-                        sign = '-'
-                    }
-
-                    if (currentFunction === datasetFunction) {
-                        display.innerHTML = toDisplay(formula);
-                        formula += sign;
-
-                        break;
-                    }
-
-                    if (currentFunction) {
-                        display.innerHTML = toDisplay(formula);
-                    }
-
-                    if (lastSign() !== sign) {
-                        formula += sign;
-                    }
-
-                    currentFunction = datasetFunction;
-
-                    break;
-                case 'divide':
-                case 'multiply':
-                    if (datasetFunction === 'divide') {
-                        sign = '/'
-                    } else {
-                        sign = '*'
-                    }
-
-                    if (currentFunction === datasetFunction) {
-                        display.innerHTML = toDisplay(formula.match(/[0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+$/)[0]);
-                        formula += sign;
-
-                        break;
-                    }
-
-                    if (currentFunction && currentFunction !== datasetFunction && currentFunction !== 'equal') {
-                        display.innerHTML = toDisplay(formula.match(/([0-9]*\.?[0-9]*([*|/][0-9]*\.?[0-9]*)+)|([0-9]*\.?[0-9]*)$/)[0]);
-                    }
-
-                    if (lastSign() !== sign) {
-                        formula += sign;
-                    }
-
-                    currentFunction = datasetFunction;
-
-                    break;
-                case 'clear':
-                    clear();
-
-                    return;
-                case 'clear-current':
-                    clearCurrent();
-
-                    this.innerHTML = 'AC';
-                    this.dataset.function = 'clear';
-
-                    return;
-                case 'comma':
-                    if (lastSign() === ')') {
-                        formula += formula.match(/[+|\-|*|/].\)$/)[0][0];
-                    }
-
-                    if (lastSign() !== '.' && !isFinite(lastSign())) {
-                        display.innerHTML = '0,';
-                        formula += '0.';
-                    }
-
-                    if (!display.innerHTML.includes(',')) {
-                        display.innerHTML += ',';
-                        formula += '.';
-                    }
-
-                    break;
-                case 'equal':
-                    if (formula.match(/^[0-9]*\.?[0-9]*?$/)) {
-                        break;
-                    }
-
-                    formula = '(' + formula;
-
-                    if (currentFunction === datasetFunction) {
-                        if (formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)) {
-                            formula += formula.match(/([+|\-|*|/]\(-[0-9]*\.?[0-9]*\)+$)|([+|\-|*|/][0-9]*\.?[0-9]*\)$)/)[0];
-                        } else if (formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)) {
-                            formula += formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*\)?$/)[0] + ')';
-                        }
-                    } else {
-                        formula += ')';
-                    }
-
-                    display.innerHTML = toDisplay(formula);
-                    currentFunction = datasetFunction;
-
-                    break;
-                case 'negation':
-                    valueToDisplay = String(formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/)[0].replace('(', '').replace(')', '') * (-1));
-                    formula = formula.slice(0, formula.match(/\(?\-?[0-9]*\.?[0-9]*\)?$/).index) + (valueToDisplay >= 0 ? valueToDisplay : ('(' + valueToDisplay + ')'));
-                    display.innerHTML = toDisplay(valueToDisplay);
-
-                    break;
-                case 'number':
-                    if (lastSign() !== '.' && !isFinite(lastSign())) {
-                        display.innerHTML = this.innerHTML;
-                        formula += this.innerHTML;
-
-                        break;
-                    }
-
-                    if (display.innerHTML === '0') {
-                        display.innerHTML = this.innerHTML;
-                        formula = this.innerHTML;
-                    } else {
-                        display.innerHTML += this.innerHTML;
-                        formula += this.innerHTML;
-                    }
-
-                    break;
-                case 'percent':
-                    const lastMatch = formula.match(/[+|\-|*|/][0-9]*\.?[0-9]*$/);
-
-                    if (!lastMatch) {
-                        formula = '(' + formula + '/100' + ')';
-                        display.innerHTML = toDisplay(formula);
-
-                        break;
-                    }
-
-                    const lastMatchNumber = lastMatch[0].match(/[0-9]*\.?[0-9]*$/);
-
-                    valueToDisplay = lastMatchNumber[0] * formula.slice(0, lastMatch.index) / 100;
-                    display.innerHTML = toDisplay(valueToDisplay);
-                    formula = formula.slice(0, lastMatch.index + lastMatchNumber.index) + valueToDisplay;
-
-                    break;
-            }
-
-            const clearButton = get('.button[data-function="clear"]');
-
-            if (clearButton) {
-                clearButton.innerHTML = 'C';
-                clearButton.dataset.function = 'clear-current';
-            }
-        });
-    });
+    getAll('.button').forEach(
+        button => isMobileByAgent()
+            ? button.addEventListener('ontouchend', clickListener())
+            : button.addEventListener('click', clickListener()),
+    );
 };
