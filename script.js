@@ -6,6 +6,7 @@ let buttonsWhichCanBeActivated;
 const canBeActivated = ['divide', 'multiply', 'subtract', 'add'];
 let currentFunction;
 let formula = '0';
+let isTouchmove = false;
 
 /**
  * Checks number for error.
@@ -36,6 +37,12 @@ function clearCurrent() {
 }
 
 function clickListener() {
+    if (isTouchmove) {
+        isTouchmove = false;
+
+        return;
+    }
+
     const datasetFunction = this.dataset.function;
     let sign;
     let valueToDisplay;
@@ -253,9 +260,12 @@ window.onload = () => {
     }, []);
     display = get('.display');
 
-    getAll('.button').forEach(
-        button => isMobileByAgent()
-            ? button.addEventListener('touchend', clickListener)
-            : button.addEventListener('click', clickListener),
-    );
+    getAll('.button').forEach(button => {
+        if (isMobileByAgent()) {
+            button.addEventListener('touchmove', () => isTouchmove = true);
+            button.addEventListener('touchend', clickListener);
+        } else {
+            button.addEventListener('click', clickListener);
+        }
+    });
 };
