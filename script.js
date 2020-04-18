@@ -255,7 +255,7 @@ window.onload = () => {
 
     getAll('.button').forEach(
         button => isMobileByAgent()
-            ? button.addEventListener('ontouchend', clickListener())
-            : button.addEventListener('click', clickListener()),
+            ? button.addEventListener('ontouchend', clickListener)
+            : button.addEventListener('click', clickListener),
     );
 };
