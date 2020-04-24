@@ -14,7 +14,10 @@ body {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 12.8vw);
-    padding: 6.4vw;
+    padding-top: 0;
+    padding-bottom: 15vw;
+    padding-left: 6vw;
+    padding-right: 6vw;
 }
 
 .display {
